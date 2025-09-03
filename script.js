@@ -49,6 +49,25 @@ function handleIntroFadeIn() {
 // Initialize fade-in animation
 handleIntroFadeIn();
 
+// Hero how paragraph fade and CTA push sequence
+function heroTextSequence(){
+  const how = document.querySelector('.hero .how');
+  const ctaRow = document.querySelector('.cta-row');
+  if (!how || !ctaRow) return;
+
+  // Start fade-in after a short delay so headline reads first
+  setTimeout(()=>{
+    how.classList.add('fade-in');
+  }, 420);
+
+  // No CTA movement — keep button stationary while paragraph fades
+
+  // Optionally remove push so button can return later (not necessary)
+}
+
+// Run once on load
+window.addEventListener('load', heroTextSequence);
+
 // --- Problem section integrated overlay control ---
 let problemActive = false;
 let problemInited = false;
