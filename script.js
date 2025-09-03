@@ -163,7 +163,9 @@ handleProblemSection();
           const hue = (a.isBlue && b.isBlue) ? 198 : (!a.isBlue && !b.isBlue ? 28 : 210);
           const sat = (a.isBlue && b.isBlue) ? 85 : (!a.isBlue && !b.isBlue ? 95 : 70);
           const lum = 60 + 20*t;
-          ctx.strokeStyle = `hsla(${hue}, ${sat}%, ${lum}%, ${0.12 + 0.18*t})`;
+            // Fade alpha more gradually until fully gone
+            const fadeAlpha = Math.pow(t, 1.5); // smoother fade, fades slower at first, faster at end
+            ctx.strokeStyle = `hsla(${hue}, ${sat}%, ${lum}%, ${fadeAlpha})`;
           ctx.lineWidth = 1.2 + 1.8*t;
           ctx.beginPath();
           // slight curve
