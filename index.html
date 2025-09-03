@@ -65,24 +65,23 @@
     <section id="contact" class="container contact-only">
       <div class="card signup">
         <h3>Contact us</h3>
-        <form name="contact" data-netlify="true" method="POST" netlify-honeypot="bot-field">
-          <input type="hidden" name="form-name" value="contact">
-          <p class="hidden"><label>Don't fill this out: <input name="bot-field" /></label></p>
+  <form id="contactForm" action="https://script.google.com/macros/s/AKfycbwGraBTSAM5mPsMM2zwaSEtHMdfRFuwncCUcpAFkCzhjJUzFLBzdRZ6FJAoho-hVxe5fQ/exec" method="POST" target="hidden_form_target_iframe">
           <div class="grid two form-grid">
-            <label>Full name
+            <label>Name
               <input required name="name" type="text" placeholder="Alex Johnson" />
             </label>
             <label>Email
               <input required name="email" type="email" placeholder="you@example.com" />
             </label>
-            <label style="grid-column: 1 / -1;">Describe your audience
-              <textarea name="message" rows="4" placeholder="e.g., 18-24 year old females who love travel and are interested in fashion…"></textarea>
+            <label style="grid-column: 1 / -1;">Audience
+              <input name="audience" type="text" placeholder="e.g., Gen Z gamers in US, 65% male" />
             </label>
-            <label style="grid-column: 1 / -1;">Describe the ad spaces you offer
-              <textarea name="ad-spaces" rows="4" placeholder="e.g., TikTok posts, Instagram stories, product cameos, 30 seconds of a YouTube video…"></textarea>
+            <label style="grid-column: 1 / -1;">Ad Spaces
+              <input name="ad_spaces" type="text" placeholder="e.g., TikTok post, IG Story, product cameo" />
             </label>
           </div>
           <button class="btn btn-dark" type="submit">Send</button>
+          <p id="form-status" class="muted small"></p>
         </form>
       </div>
     </section>
@@ -95,5 +94,38 @@
   </footer>
 
   <script src="script.js"></script>
+  <!-- Hidden iframe used as form target so the page doesn't navigate on submit -->
+  <iframe id="hidden_form_target_iframe" name="hidden_form_target_iframe" style="display:none"></iframe>
+  
+    <script>
+      (function(){
+        const form = document.getElementById('contactForm');
+        const status = document.getElementById('form-status');
+        const iframe = document.getElementById('hidden_form_target_iframe');
+        if (!form || !status || !iframe) return;
+  
+        let timeoutId = null;
+        let _ignoredInitialIframeLoad = true; // ignore the first iframe 'load' that fires on page load
+        // Ensure status is empty initially
+        status.textContent = '';
+
+        // When the iframe finishes loading the response from Apps Script, show success
+        iframe.addEventListener('load', () => {
+          if (_ignoredInitialIframeLoad) { _ignoredInitialIframeLoad = false; return; }
+          if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+          status.textContent = 'Thanks — submission sent.';
+          try { form.reset(); } catch (e) { /* ignore */ }
+        });
+  
+        // Show immediate sending state and fallback message if nothing returns
+        form.addEventListener('submit', () => {
+          status.textContent = 'Sending...';
+          if (timeoutId) clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => {
+            status.textContent = 'Submission may have failed — check the sheet or try again.';
+          }, 8000);
+        });
+      })();
+    </script>
 </body>
 </html>
