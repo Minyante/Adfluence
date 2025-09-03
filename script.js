@@ -121,10 +121,12 @@ handleProblemSection();
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const intensity = forceOff ? 0 : (prefersReduced && !forceOn ? 0.6 : 1.0);
 
-  const baseBlobCount = 14; // higher baseline than v6.1
+  const baseBlobCount = 30; // higher baseline than v6.1
   const blobCount = Math.floor(baseBlobCount * (0.6 + 0.4*intensity)); // 9–14
 
   const blobs = [];
+  // cursor/touch for gentle magnetism
+  let mouse = { x: 0, y: 0, active: false };
   function rand(min, max){ return Math.random()*(max-min)+min; }
 
   function resize(){
@@ -201,6 +203,27 @@ handleProblemSection();
     // draw blobs
     ctx.globalCompositeOperation = 'lighter';
     for (const b of blobs){
+      // gentle magnetism toward cursor if active
+      if (mouse.active){
+        const dxm = mouse.x - b.x;
+        const dym = mouse.y - b.y;
+        const distm = Math.hypot(dxm, dym) + 0.0001;
+        // subtle attraction values
+        const influence = 120; // px radius of gentle effect
+        if (distm < influence){
+          // strength scales with proximity and blob size (bigger blobs feel slightly more)
+          const t = 1 - (distm / influence);
+          // reduced base strength for a more subtle pull
+          const strength = 0.02 * t * (0.9 + (b.r/140));
+          b.vx += (dxm/distm) * strength;
+          b.vy += (dym/distm) * strength;
+          // clamp velocity so motion stays natural (lower max)
+          const vmax = 0.25;
+          b.vx = Math.max(Math.min(b.vx, vmax), -vmax);
+          b.vy = Math.max(Math.min(b.vy, vmax), -vmax);
+        }
+      }
+
       b.x += b.vx; b.y += b.vy;
       if (b.x < -b.r || b.x > width + b.r) b.vx *= -1;
       if (b.y < -b.r || b.y > height + b.r) b.vy *= -1;
@@ -316,6 +339,25 @@ handleProblemSection();
   function init(){
     resize();
     makeBlobs();
+    // mouse/touch handlers for magnetism — listen on window because the canvas
+    // sits behind content (z-index:-1) and won't receive pointer events.
+    window.addEventListener('mousemove', (ev)=>{
+      const r = canvas.getBoundingClientRect();
+      mouse.x = ev.clientX - r.left;
+      mouse.y = ev.clientY - r.top;
+      mouse.active = true;
+    });
+    window.addEventListener('mouseleave', ()=>{ mouse.active = false; });
+    window.addEventListener('blur', ()=>{ mouse.active = false; });
+    window.addEventListener('touchmove', (ev)=>{
+      const t = ev.touches && ev.touches[0];
+      if (!t) return;
+      const r = canvas.getBoundingClientRect();
+      mouse.x = t.clientX - r.left;
+      mouse.y = t.clientY - r.top;
+      mouse.active = true;
+    }, { passive: true });
+    window.addEventListener('touchend', ()=>{ mouse.active = false; });
     if (!forceOff) start();
   }
 
